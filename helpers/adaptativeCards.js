@@ -36,6 +36,7 @@ module.exports = {
         let images = [{
             'type': 'message',
             'text': '',
+            'id': '0',
             'attachments': [
                 {
                     'contentType': 'application/vnd.microsoft.card.adaptive',
@@ -61,6 +62,7 @@ module.exports = {
         },];
         console.log('data', data);
         data = JSON.parse(data);
+        let id = 1;
 
         data.queryresult.pods.forEach(pod => {
             pod.subpods.forEach(subpod => {
@@ -79,6 +81,7 @@ module.exports = {
                 images.push({
                     'type': 'message',
                     'text': '',
+                    'id': id.toString(),
                     'attachments': [
                         {
                             'contentType': 'application/vnd.microsoft.card.adaptive',
@@ -90,6 +93,7 @@ module.exports = {
                         }
                     ]
                 });
+                id++;
             });
         });
         return images;

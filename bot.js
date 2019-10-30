@@ -15,8 +15,8 @@ class MyBot extends ActivityHandler {
             if (context.activity.hasOwnProperty('value') && context.activity.value.exercise) {
                 const response = await avaamo.getAvaamoResponse(context.activity.value.exercise);
                 
-                adaptiveCard.getResponseCard(response).forEach(element => {
-                    context.sendActivity(element);
+                adaptiveCard.getResponseCard(response).forEach((element, index) => {
+                    if(element.id == index) context.sendActivity(element);
                 });
                 await context.sendActivity(adaptiveCard.getInitialCard());
             }
