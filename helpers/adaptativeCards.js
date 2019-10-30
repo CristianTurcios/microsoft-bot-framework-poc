@@ -45,7 +45,7 @@ module.exports = {
                         'body': [
                             {
                                 type: 'TextBlock',
-                                text: '<h1>Here is the answer of your question</h1>',
+                                text: 'Here is the answer of your question',
                                 size: 'large'
                             },
                             {
@@ -62,8 +62,20 @@ module.exports = {
         console.log('data', data);
         data = JSON.parse(data);
 
-        data.queryresult.pods.forEach((pod) => {
-            pod.subpods.forEach((subpod) => {
+        data.queryresult.pods.forEach(pod => {
+            pod.subpods.forEach(subpod => {
+
+                const messages = subpod.plaintext.split('\n');
+                console.log('messages', messages);
+                const body = [];
+                messages.forEach(element => {
+                    body.push({
+                        type: 'TextBlock',
+                        text: element !== '' ? `[${element.replace('|', '')}](${subpod.img.src})`: `[Open Image](${subpod.img.src})`, 
+                        size: 'medium',
+                        weight: 'lighter'
+                    })
+                });
                 images.push({
                     'type': 'message',
                     'text': '',
@@ -73,23 +85,11 @@ module.exports = {
                             'content': {
                                 'type': 'AdaptiveCard',
                                 'version': '1.0',
-                                'body': [
-                                    {
-                                        type: 'ImageSet',
-                                        imageSize: 'large',
-                                        images: [
-                                            {
-                                                'type': 'Image',
-                                                'url': subpod.img.src
-                                            },
-                                        ]
-                                    }
-                                ]
+                                'body': body
                             }
                         }
                     ]
                 });
-
             });
         });
         return images;
