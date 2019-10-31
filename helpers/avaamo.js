@@ -1,30 +1,111 @@
 const axios = require('axios');
+const { Avaamo, Parser } = require('avaamo-customchannel');
+const { parseName } = require('./common');
 
 module.exports = {
-    getAvaamoResponse: async (exercise) => {
-        if (!exercise.includes('solve')) exercise = `solve ${exercise}`;
+    getAvaamoResponse: async (exercise, user) => {
+        //if (!exercise.includes('solve')) exercise = `solve ${exercise}`;
         console.log('exercise', exercise);
-
-        const data = {
-            channel_uuid: 'e44b5717-189d-4109-b2fe-b56785d5bee9',
-            user: {
-                first_name: 'Cristian',
-                last_name: 'Code',
-                uuid: '9ac15843-151d-47fb-8b3d-930b89ce797e'
-            },
-            message: {
-                text: exercise
-            }
+        const channel = {
+            webhook: 'https://c0.avaamo.com/bot_connector_webhooks/86fe561c-5a67-49c8-8d39-50f57bb768d3/message.json',
+            id: '1fb44252-2797-48ae-b195-3d0e391f38a9'
+        };
+        const name = parseName(user.name);
+        const avaamoUser = {
+            id: user.id,
+            first_name: name.first_name,
+            last_name: name.last_name
         };
 
-        const requestResult = await axios({
-            method: 'POST',
-            url: 'https://c0.avaamo.com/bot_connector_webhooks/2771d4bb-35c7-408f-8d40-830023dc93bf/message.json',
-            data,
-            headers: {
-                'Content-Type': 'application/json'
+        var avaamo = new Avaamo(avaamoUser.id, channel.webhook, channel.id, avaamoUser.first_name, avaamoUser.last_name);
+
+        let responses = await avaamo.query(exercise);
+        console.log(responses)
+        responses = responses.map(response => {
+            try {
+                let parser = new Parser(response);
+                let reply = parser.parse();
+                if (!reply && response.attachment) {
+                    const payload = response.attachment.payload;
+                    if (payload) {
+                        payload.type = payload.template_type
+                        reply = payload;
+                    }
+                }
+                return convertToAdaptiveCard(reply);
+            } catch (error) {
+                return null;
             }
-        });
-        return requestResult.data.incoming_message.bot_replies[0].text;
+        }).filter(response => !!response);
+        return responses;
     }
+}
+
+function convertToAdaptiveCard(message) {
+    let convertedMsg = {
+        'type': 'message',
+        'text': message.text
+    };
+    if (message.type === 'card') {
+        convertedMsg = parseCard(message)
+    } else if (message.type === 'button') {
+        convertedMsg = parseButton(message)
+    }
+
+    return convertedMsg;
+}
+
+function parseCard(message) {
+    const body = [];
+    if (message.title) {
+        body.push({
+            type: 'TextBlock',
+            text: message.title
+        })
+    }
+    if (message.subtitle) {
+        body.push({
+            type: 'TextBlock',
+            text: message.subtitle
+        })
+    }
+    return {
+        'type': 'message',
+        'text': '',
+        'attachments': [
+            {
+                'contentType': 'application/vnd.microsoft.card.adaptive',
+                'content': {
+                    'type': 'AdaptiveCard',
+                    'version': '1.0',
+                    'body': body
+                }
+            }
+        ]
+    };
+}
+
+function parseButton(message) {
+    const actions = [];
+    message.buttons.forEach(button => {
+        actions.push({
+            "type": "Action.OpenUrl",
+            "url": button.url,
+            "title": button.title
+        })
+    });
+    return {
+        'type': 'message',
+        'text': message.text,
+        'attachments': [
+            {
+                'contentType': 'application/vnd.microsoft.card.adaptive',
+                'content': {
+                    'type': 'AdaptiveCard',
+                    'version': '1.0',
+                    'actions': actions
+                }
+            }
+        ]
+    };
 }

@@ -11,17 +11,12 @@ class MyBot extends ActivityHandler {
         super();
         // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
         this.onMessage(async (context, next) => {
-
-            if (context.activity.hasOwnProperty('value') && context.activity.value.exercise) {
-                const response = await avaamo.getAvaamoResponse(context.activity.value.exercise);
-                
-                adaptiveCard.getResponseCard(response).forEach(async (element) => await context.sendActivity(element));
-                await context.sendActivity(adaptiveCard.getInitialCard());
-            }
-            else {
-                await context.sendActivity('You need put an exercise in the input field');
-                await context.sendActivity(adaptiveCard.getInitialCard());
-            }
+            const text = context.activity.text
+            .replace('<at>dev wolfie</at>', '')
+            .replace('<at>wolfie-dev</at>', '');
+            const from = context.activity.from;
+            const responses = await avaamo.getAvaamoResponse(text, from);
+            responses.forEach(async (element) => await context.sendActivity(element));
 
             // By calling next() you ensure that the next BotHandler is run.
             await next();
@@ -32,7 +27,7 @@ class MyBot extends ActivityHandler {
             for (let cnt = 0; cnt < membersAdded.length; ++cnt) {
                 if (membersAdded[cnt].id !== context.activity.recipient.id) {
                     await context.sendActivity('Hello and welcome!');
-                    await context.sendActivity(adaptiveCard.getInitialCard());
+                    await context.sendActivity(adaptiveCard.getInitialCard(context));
                 }
             }
             // By calling next() you ensure that the next BotHandler is run.

@@ -1,5 +1,6 @@
 module.exports = {
-    getInitialCard: () => {
+    getInitialCard: (context) => {
+        const name = context.activity.from.name;
         return {
             type: 'message',
             text: '',
@@ -12,7 +13,7 @@ module.exports = {
                         'body': [
                             {
                                 'type': 'TextBlock',
-                                'text': 'Hi! I am here to help you resolve any math question you may have 🤓'
+                                'text': `Hi ${name}! I am here to help you resolve any math question you may have 🤓`
                             },
                             {
                                 'type': 'Input.Text',
