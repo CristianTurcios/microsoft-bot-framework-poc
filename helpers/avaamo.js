@@ -1,6 +1,11 @@
 const axios = require('axios');
-const { Avaamo, Parser } = require('avaamo-customchannel');
-const { parseName } = require('./common');
+const {
+    Avaamo,
+    Parser
+} = require('avaamo-customchannel');
+const {
+    parseName
+} = require('./common');
 
 module.exports = {
     getAvaamoResponse: async (exercise, user) => {
@@ -17,14 +22,15 @@ module.exports = {
             last_name: name.last_name
         };
 
-        var avaamo = new Avaamo(avaamoUser.id, channel.webhook, channel.id, avaamoUser.first_name, avaamoUser.last_name);
+        const avaamo = new Avaamo(avaamoUser.id, channel.webhook, channel.id, avaamoUser.first_name, avaamoUser.last_name);
 
         let responses = await avaamo.query(exercise);
-        console.log(responses)
         responses = responses.map(response => {
             try {
                 let parser = new Parser(response);
                 let reply = parser.parse();
+                // console.log('reply', reply);
+
                 if (!reply && response.attachment) {
                     const payload = response.attachment.payload;
                     if (payload) {
@@ -42,6 +48,8 @@ module.exports = {
 }
 
 function convertToAdaptiveCard(message) {
+    console.log('message', message);
+
     let convertedMsg = {
         'type': 'message',
         'text': message.text
@@ -50,6 +58,8 @@ function convertToAdaptiveCard(message) {
         convertedMsg = parseCard(message)
     } else if (message.type === 'button') {
         convertedMsg = parseButton(message)
+    } else if (message.type === 'quickreply') {
+        convertedMsg = parseQuickReply(message)
     }
 
     return convertedMsg;
@@ -72,16 +82,14 @@ function parseCard(message) {
     return {
         'type': 'message',
         'text': '',
-        'attachments': [
-            {
-                'contentType': 'application/vnd.microsoft.card.adaptive',
-                'content': {
-                    'type': 'AdaptiveCard',
-                    'version': '1.0',
-                    'body': body
-                }
+        'attachments': [{
+            'contentType': 'application/vnd.microsoft.card.adaptive',
+            'content': {
+                'type': 'AdaptiveCard',
+                'version': '1.0',
+                'body': body
             }
-        ]
+        }]
     };
 }
 
@@ -89,23 +97,48 @@ function parseButton(message) {
     const actions = [];
     message.buttons.forEach(button => {
         actions.push({
-            "type": "Action.OpenUrl",
-            "url": button.url,
-            "title": button.title
+            'type': 'Action.Submit',
+            'title': button.title,
+            "data": {
+                [button.title]: button.title
+            }
         })
     });
     return {
         'type': 'message',
         'text': message.text,
-        'attachments': [
-            {
-                'contentType': 'application/vnd.microsoft.card.adaptive',
-                'content': {
-                    'type': 'AdaptiveCard',
-                    'version': '1.0',
-                    'actions': actions
-                }
+        'attachments': [{
+            'contentType': 'application/vnd.microsoft.card.adaptive',
+            'content': {
+                'type': 'AdaptiveCard',
+                'version': '1.0',
+                'actions': actions
             }
-        ]
+        }]
+    };
+}
+
+function parseQuickReply(message) {
+    const actions = [];
+    message.options.forEach(element => {
+        actions.push({
+            'type': 'Action.Submit',
+            'title': element.title,
+            "data": {
+                [element.title]: element.title
+            }
+        })
+    });
+    return {
+        'type': 'message',
+        'text': message.text,
+        'attachments': [{
+            'contentType': 'application/vnd.microsoft.card.adaptive',
+            'content': {
+                'type': 'AdaptiveCard',
+                'version': '1.0',
+                'actions': actions
+            }
+        }]
     };
 }
