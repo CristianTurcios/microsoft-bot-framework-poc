@@ -11,9 +11,6 @@ class MyBot extends ActivityHandler {
         super();
         // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
         this.onMessage(async (context, next) => {
-            console.log('1', context.activity.value);
-            console.log('2', context.activity.text);
-            
             let text;
             if (context.activity.text) {
                 text = context.activity.text
