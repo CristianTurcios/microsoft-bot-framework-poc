@@ -1,4 +1,3 @@
-const axios = require('axios');
 const {
     Avaamo,
     Parser
@@ -29,7 +28,6 @@ module.exports = {
             try {
                 let parser = new Parser(response);
                 let reply = parser.parse();
-                // console.log('reply', reply);
 
                 if (!reply && response.attachment) {
                     const payload = response.attachment.payload;
@@ -48,11 +46,9 @@ module.exports = {
 }
 
 function convertToAdaptiveCard(message) {
-    console.log('message', message);
-
     let convertedMsg = {
-        'type': 'message',
-        'text': message.text
+        type: 'message',
+        text: message.text
     };
     if (message.type === 'card') {
         convertedMsg = parseCard(message)
@@ -60,59 +56,34 @@ function convertToAdaptiveCard(message) {
         convertedMsg = parseButton(message)
     } else if (message.type === 'quickreply') {
         convertedMsg = parseQuickReply(message)
+    } else if (message.type === 'carousel') {
+        convertedMsg = parseCarousel(message)
+    } else if (message.type === 'list') {
+        convertedMsg = parseList(message)
     }
-
     return convertedMsg;
-}
-
-function parseCard(message) {
-    const body = [];
-    if (message.title) {
-        body.push({
-            type: 'TextBlock',
-            text: message.title
-        })
-    }
-    if (message.subtitle) {
-        body.push({
-            type: 'TextBlock',
-            text: message.subtitle
-        })
-    }
-    return {
-        'type': 'message',
-        'text': '',
-        'attachments': [{
-            'contentType': 'application/vnd.microsoft.card.adaptive',
-            'content': {
-                'type': 'AdaptiveCard',
-                'version': '1.0',
-                'body': body
-            }
-        }]
-    };
 }
 
 function parseButton(message) {
     const actions = [];
     message.buttons.forEach(button => {
         actions.push({
-            'type': 'Action.Submit',
-            'title': button.title,
-            "data": {
+            type: 'Action.Submit',
+            title: button.title,
+            data: {
                 [button.title]: button.title
             }
         })
     });
     return {
-        'type': 'message',
-        'text': message.text,
-        'attachments': [{
-            'contentType': 'application/vnd.microsoft.card.adaptive',
-            'content': {
-                'type': 'AdaptiveCard',
-                'version': '1.0',
-                'actions': actions
+        type: 'message',
+        text: message.text,
+        attachments: [{
+            contentType: 'application/vnd.microsoft.card.adaptive',
+            content: {
+                type: 'AdaptiveCard',
+                version: '1.0',
+                actions: actions
             }
         }]
     };
@@ -122,23 +93,112 @@ function parseQuickReply(message) {
     const actions = [];
     message.options.forEach(element => {
         actions.push({
-            'type': 'Action.Submit',
-            'title': element.title,
-            "data": {
-                [element.title]: element.title
+            type: 'Action.Submit',
+            title: element.title,
+            data: {
+                [element.title]: element.payload
             }
         })
     });
     return {
-        'type': 'message',
-        'text': message.text,
-        'attachments': [{
-            'contentType': 'application/vnd.microsoft.card.adaptive',
-            'content': {
-                'type': 'AdaptiveCard',
-                'version': '1.0',
-                'actions': actions
+        type: 'message',
+        text: message.text,
+        attachments: [{
+            contentType: 'application/vnd.microsoft.card.adaptive',
+            content: {
+                type: 'AdaptiveCard',
+                version: '1.0',
+                actions: actions
             }
         }]
+    };
+}
+
+function parseCard(message, parseCarouselCards = false) {
+    const body = [];
+    const actions = [];
+
+    if (message.title) {
+        body.push({
+            type: 'TextBlock',
+            text: message.title
+        });
+    }
+    if (message.subtitle) {
+        body.push({
+            type: 'TextBlock',
+            text: message.subtitle
+        });
+    }
+    message.options.forEach(element => {
+        if (element.type === 'postback') {
+            actions.push({
+                type: 'Action.Submit',
+                title: element.title,
+                data: {
+                    [element.title]: element.payload
+                }
+            });
+        } else if (element.type === 'web_url') {
+            actions.push({
+                type: 'Action.OpenUrl',
+                title: element.title,
+                url: element.url
+            });
+        }
+    });
+
+    if (parseCarouselCards) {
+        return {
+            contentType: 'application/vnd.microsoft.card.adaptive',
+            content: {
+                type: 'AdaptiveCard',
+                backgroundImage: message.image,
+                version: '1.0',
+                body: body,
+                actions: actions
+            }
+        }
+    } else {
+        return {
+            type: 'message',
+            text: '',
+            attachments: [{
+                contentType: 'application/vnd.microsoft.card.adaptive',
+                content: {
+                    type: 'AdaptiveCard',
+                    version: '1.0',
+                    body: body,
+                    actions: actions
+                }
+            }]
+        };
+    }
+}
+
+function parseCarousel(message) {
+    // In MS teams only admit max of 10 cards
+    const attachments = [];
+    message.cards.forEach(element => attachments.push(parseCard(element, true)));
+
+    return {
+        type: 'message',
+        attachmentLayout: 'carousel',
+        text: '',
+        attachments: attachments
+    };
+}
+
+function parseList(message) {
+    // In teams only admit max of 10 cards
+    console.log('message', message);
+
+    const attachments = [];
+    message.cards.forEach(element => attachments.push(parseCard(element, true)));
+
+    return {
+        type: 'message',
+        text: '',
+        attachments: attachments
     };
 }

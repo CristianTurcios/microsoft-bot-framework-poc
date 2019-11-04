@@ -11,8 +11,8 @@ class MyBot extends ActivityHandler {
         super();
         // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
         this.onMessage(async (context, next) => {
-            console.log(context.activity.value);
-            console.log(context.activity.text);
+            console.log('1', context.activity.value);
+            console.log('2', context.activity.text);
             
             let text;
             if (context.activity.text) {
@@ -21,9 +21,8 @@ class MyBot extends ActivityHandler {
                 .replace('<at>wolfie-dev</at>', '');
             }
             else {
-                text = Object.keys(context.activity.value)[0];
+                text = context.activity.value[Object.keys(context.activity.value)[0]];
             }
-
 
             const from = context.activity.from;
             const responses = await avaamo.getAvaamoResponse(text, from);

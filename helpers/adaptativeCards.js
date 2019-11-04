@@ -6,25 +6,25 @@ module.exports = {
             text: '',
             attachments: [
                 {
-                    'contentType': 'application/vnd.microsoft.card.adaptive',
-                    'content': {
-                        'type': 'AdaptiveCard',
-                        'version': '1.0',
-                        'body': [
+                    contentType: 'application/vnd.microsoft.card.adaptive',
+                    content: {
+                        type: 'AdaptiveCard',
+                        version: '1.0',
+                        body: [
                             {
-                                'type': 'TextBlock',
-                                'text': `Hi ${name}! I am here to help you resolve any math question you may have 🤓`
+                                type: 'TextBlock',
+                                text: `Hi ${name}! I am here to help you resolve any math question you may have 🤓`
                             },
                             {
-                                'type': 'Input.Text',
-                                'id': 'exercise',
-                                'placeholder': 'Eg: solve 3x-7=11'
+                                type: 'Input.Text',
+                                id: 'exercise',
+                                placeholder: 'Eg: solve 3x-7=11'
                             }
                         ],
-                        'actions': [
+                        actions: [
                             {
-                                'type': 'Action.Submit',
-                                'title': 'Submit',
+                                type: 'Action.Submit',
+                                title: 'Submit',
                             }
                         ]
                     }
@@ -35,15 +35,15 @@ module.exports = {
 
     getResponseCard: (data = {}) => {
         let images = [{
-            'type': 'message',
-            'text': '',
-            'attachments': [
+            type: 'message',
+            text: '',
+            attachments: [
                 {
-                    'contentType': 'application/vnd.microsoft.card.adaptive',
-                    'content': {
-                        'type': 'AdaptiveCard',
-                        'version': '1.0',
-                        'body': [
+                    contentType: 'application/vnd.microsoft.card.adaptive',
+                    content: {
+                        type: 'AdaptiveCard',
+                        version: '1.0',
+                        body: [
                             {
                                 type: 'TextBlock',
                                 text: 'Here is the answer of your question',
@@ -59,13 +59,11 @@ module.exports = {
                     }
                 }
             ]
-        },];
-        console.log('data', data);
+        }];
         data = JSON.parse(data);
 
         data.queryresult.pods.forEach(pod => {
             pod.subpods.forEach(subpod => {
-
                 const messages = subpod.plaintext.split('\n');
                 const body = [];
                 messages.forEach(element => {
@@ -77,15 +75,15 @@ module.exports = {
                     })
                 });
                 images.push({
-                    'type': 'message',
-                    'text': '',
-                    'attachments': [
+                    type: 'message',
+                    text: '',
+                    attachments: [
                         {
-                            'contentType': 'application/vnd.microsoft.card.adaptive',
-                            'content': {
-                                'type': 'AdaptiveCard',
-                                'version': '1.0',
-                                'body': body
+                            contentType: 'application/vnd.microsoft.card.adaptive',
+                            content: {
+                                type: 'AdaptiveCard',
+                                version: '1.0',
+                                body: body
                             }
                         }
                     ]
