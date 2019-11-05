@@ -12,6 +12,7 @@ class MyBot extends ActivityHandler {
         // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
         this.onMessage(async (context, next) => {
             let text;
+            
             if (context.activity.text) {
                 text = context.activity.text
                 .replace('<at>dev wolfie</at>', '')

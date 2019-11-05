@@ -1,4 +1,5 @@
 module.exports = {
+
   getInitialCard: (context) => {
     const { name } = context.activity.from;
     return {

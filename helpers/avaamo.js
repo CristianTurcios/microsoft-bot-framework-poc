@@ -30,6 +30,7 @@ module.exports = {
     );
 
     let responses = await avaamo.query(exercise);
+    
     responses = responses.map((response) => {
       try {
         const parser = new Parser(response);
@@ -49,6 +50,7 @@ module.exports = {
         return null;
       }
     }).filter((response) => !!response);
+    
     return responses;
   },
 
